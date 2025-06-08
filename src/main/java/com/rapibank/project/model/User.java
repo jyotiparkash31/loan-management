@@ -19,6 +19,9 @@ public class User {
     private String emailId;
 
     @Column(nullable = false)
+    private String role;
+
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false)

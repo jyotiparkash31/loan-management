@@ -69,6 +69,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPasswordCreatedDate(LocalDateTime.now());
         user.setIsActive(true);
+        user.setRole(request.getRole());
         user.setCreatedDate(LocalDateTime.now());
         user.setUpdatedDate(LocalDateTime.now());
 

@@ -15,8 +15,6 @@ import java.util.Date;
 public class JwtTokenProvider {
     private final long EXPIRATION_TIME = 86400000; // 1 day
 
-//    SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Generates a secure key
-//    String base64Key = Base64.getEncoder().encodeToString(secretKey.getEncoded());
     private final String BASE64_SECRET = "CsGsE85n+9YWoItb7+oYAy4NH/DvG87h99TP71PZTug=";
 
     private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(BASE64_SECRET));
@@ -60,14 +58,5 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
-    public String getRoleFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token.trim())
-                .getBody();
-
-        return claims.get("role", String.class);
-    }
 
 }
