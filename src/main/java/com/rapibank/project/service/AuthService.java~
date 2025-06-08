@@ -1,0 +1,60 @@
+package com.rapibank.project.service;
+
+import com.rapibank.project.dto.ChangePasswordRequest;
+import com.rapibank.project.dto.LoginRequest;
+import com.rapibank.project.model.User;
+import com.rapibank.project.repository.UserRepository;
+import com.rapibank.project.security.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import javax.validation.Valid;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Service
+public class AuthService {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public String login(@Valid LoginRequest loginRequest) {
+        Optional<User> userOptional = userRepository.findByEmailId(loginRequest.getEmailId());
+        System.out.println("Login Email: " + loginRequest.getEmailId());
+        System.out.println("Password: " + loginRequest.getPassword());
+        System.out.println("User Present: " + userOptional.isPresent());
+
+        User user = userRepository.findByEmailId(loginRequest.getEmailId())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        System.out.println(passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()));
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        if (user.getPasswordCreatedDate().isBefore(LocalDateTime.now().minusDays(90))) {
+            throw new RuntimeException("Password expired. Please change your password.");
+        }
+
+        user.setLastLoginDatetime(LocalDateTime.now());
+        userRepository.save(user);
+
+        return jwtTokenProvider.generateToken(user.getEmailId());
+    }
+
+    public void changePassword(@Valid ChangePasswordRequest request, String email) {
+        User user = userRepository.findByEmailId(email).orElseThrow(() -> new RuntimeException("User  not found"));
+        if (passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            user.setPasswordCreatedDate(LocalDateTime.now());
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("Old password is incorrect");
+        }
+    }
+}
